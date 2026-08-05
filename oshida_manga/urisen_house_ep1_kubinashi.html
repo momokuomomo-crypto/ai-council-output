@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ウリ専ハウスへようこそ 第1話</title>
+<style>
+  :root{ --ink:#5b4a40; --paper:#f7f1e4; --panel:#fffdf8; }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; background:#e8ddc9; color:var(--ink);
+    font-family:"Hiragino Maru Gothic ProN","Yu Gothic","Zen Maru Gothic",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .book{ max-width:820px; margin:0 auto; padding:24px 14px 80px; }
+  .cover{
+    background:var(--panel); border:2.5px solid var(--ink); border-radius:14px;
+    padding:34px 24px 26px; text-align:center; margin-bottom:28px;
+    box-shadow:0 8px 22px rgba(91,74,64,.25);
+  }
+  .cover h1{ font-size:33px; margin:0 0 6px; letter-spacing:.05em; }
+  .cover .ep{ font-size:19px; font-weight:700; margin:8px 0 2px; }
+  .cover .sub{ font-size:13px; color:#a08a70; }
+  .cast{ display:flex; justify-content:center; align-items:flex-end; gap:2px; margin:14px 0 6px; }
+  .cast div{ width:132px; }
+  .cast svg{ width:100%; display:block; }
+  .page{
+    background:var(--paper); border:2.5px solid var(--ink); border-radius:14px;
+    padding:12px; margin:0 auto 26px; box-shadow:0 8px 22px rgba(91,74,64,.25);
+    position:relative;
+  }
+  .pagenum{
+    position:absolute; bottom:4px; left:50%; transform:translateX(-50%);
+    font-size:12px; color:#b9a488; font-weight:700;
+  }
+  .row{ display:flex; flex-direction:row-reverse; gap:10px; margin-bottom:10px; }
+  .row:last-child{ margin-bottom:14px; }
+  .panel{
+    position:relative; background:var(--panel); border:2.2px solid var(--ink);
+    border-radius:10px; overflow:hidden; flex:1 1 0;
+  }
+  .stage{ position:absolute; inset:0; }
+  .scene{ position:absolute; inset:0; width:100%; height:100%; }
+  .ch{ position:absolute; z-index:2; }
+  .ch svg{ display:block; width:100%; height:auto; overflow:visible; }
+  .bub{
+    position:absolute; background:#fff; border:2px solid var(--ink);
+    border-radius:18px; padding:7px 11px; text-align:center;
+    font-weight:700; line-height:1.35; font-size:13px; letter-spacing:.01em;
+    box-shadow:1px 2px 0 rgba(91,74,64,.15); z-index:5; white-space:nowrap;
+    color:#4a3b33;
+  }
+  .bub small{ font-size:11px; }
+  .bub.think{ border-style:dotted; border-width:2.5px; border-radius:26px; background:#fffdf2; }
+  .bub.shout{
+    border-radius:12px; background:#fff; color:#c25a4a; border-color:#c25a4a;
+    border-width:2.5px; padding:9px 12px;
+  }
+  .naru{
+    position:absolute; background:#fffdf2; border:2px solid var(--ink);
+    border-radius:4px; padding:6px 10px; font-size:12px; font-weight:700;
+    white-space:nowrap; line-height:1.35; box-shadow:2px 2px 0 rgba(91,74,64,.12); z-index:5;
+    color:#4a3b33;
+  }
+  .sfx{
+    position:absolute; font-weight:900; color:#8a745e;
+    font-size:24px; letter-spacing:.02em;
+    transform:rotate(-6deg); pointer-events:none; z-index:4;
+  }
+  .name{ position:absolute; font-size:10px; font-weight:800; color:#8a745e;
+    background:rgba(255,255,255,.85); padding:1px 6px; border-radius:8px; z-index:5;
+    border:1.5px solid rgba(91,74,64,.4); }
+  .endcard{ text-align:center; color:#8a745e; padding:10px 0 0; font-weight:700; }
+  .note{ background:var(--panel); border:2px dashed var(--ink); border-radius:10px;
+    padding:16px 18px; font-size:13px; line-height:1.7; }
+  .note h3{ margin:0 0 8px; }
+</style>
+</head>
+<body>
+<div class="book" id="book"></div>
+
+<script>
+/* ============ 作画エンジン（やわらか・低頭身・首なしスタイル） ============ */
+let uid=0;
+const LN='#5b4a40';           // 主線（やわらかい焦げ茶）
+const sr=i=>{const x=Math.sin(i*127.1+311.7)*43758.5453;return x-Math.floor(x);};
+
+const CH={
+  ren: { skin:'#fbe8d8', hair:'#4a3f3d', hairHi:'#6e6260', cloth:'#7d86a8', cloth2:'#6a7394' },
+  dai: { skin:'#f6ddc0', hair:'#8a7154', hairHi:'#a58a68', cloth:'#9aa88e', cloth2:'#87957b' },
+  gon: { skin:'#eec49a', hair:'#55463c', hairHi:'#6e5c50', cloth:'#f4f0e4', cloth2:'#e2dcc8' },
+  piyo:{ skin:'#ffeee2', hair:'#c69a6e', hairHi:'#d9b088', cloth:'#f7c8d4', cloth2:'#eab4c2' }
+};
+
+/* 表情テーブル */
+const EXPR={
+  normal:{e:'dot',m:'closed'},
+  deadpan:{e:'line',m:'closed'},
+  smug:{e:'line',m:'smirk'},
+  soft:{e:'arc',m:'smile'},
+  happy:{e:'arc',m:'open'},
+  grin:{e:'dot',m:'grin'},
+  dead:{e:'flatlow',m:'wavy'},
+  cry:{e:'crya',m:'wavy',tear:1},
+  shock:{e:'ring',m:'oo',sweat:1},
+  yell:{e:'angry',m:'shout'},
+  blank:{e:'tinydot',m:'oo'},
+  x:{e:'xx',m:'wavy',sweat:1}
+};
+
+/* 目（シンプル・かわいい系） */
+function eyes(who,kind,cy){
+  const dx = who==='gon'?24:18;
+  const L=100-dx, R=100+dx;
+  const one=(cx)=>{
+    switch(kind){
+      case 'dot':{
+        const r = who==='piyo'?5.2:4.2;
+        let s=`<ellipse cx="${cx}" cy="${cy}" rx="${r*0.82}" ry="${r}" fill="${LN}"/>`;
+        if(who==='piyo') s+=`<circle cx="${cx-1.5}" cy="${cy-1.8}" r="1.6" fill="#fff"/>`;
+        if(who==='ren') s=`<path d="M${cx-6} ${cy-4} Q${cx} ${cy-6.5} ${cx+6} ${cy-4}" stroke="${LN}" stroke-width="2" fill="none" stroke-linecap="round"/>`+s;
+        if(who==='gon') s=`<circle cx="${cx}" cy="${cy}" r="3" fill="${LN}"/>`;
+        return s;
+      }
+      case 'tinydot': return `<circle cx="${cx}" cy="${cy}" r="2.6" fill="${LN}"/>`;
+      case 'line': return `<path d="M${cx-6.5} ${cy} Q${cx} ${cy+1.5} ${cx+6.5} ${cy}" stroke="${LN}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+      case 'flatlow': return `<path d="M${cx-6.5} ${cy+1} L${cx+6.5} ${cy+1}" stroke="${LN}" stroke-width="2.8" stroke-linecap="round"/>`;
+      case 'arc': return `<path d="M${cx-6.5} ${cy+2} Q${cx} ${cy-6} ${cx+6.5} ${cy+2}" stroke="${LN}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+      case 'crya': return `<path d="M${cx-6.5} ${cy} Q${cx} ${cy+5.5} ${cx+6.5} ${cy}" stroke="${LN}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+      case 'ring': return `<circle cx="${cx}" cy="${cy}" r="6" fill="#fff" stroke="${LN}" stroke-width="2.4"/><circle cx="${cx}" cy="${cy}" r="1.8" fill="${LN}"/>`;
+      case 'xx': return `<path d="M${cx-5} ${cy-4.5} L${cx+5} ${cy+4.5} M${cx+5} ${cy-4.5} L${cx-5} ${cy+4.5}" stroke="${LN}" stroke-width="2.8" stroke-linecap="round"/>`;
+      case 'angry': return `<circle cx="${cx}" cy="${cy+1}" r="4" fill="${LN}"/><path d="M${cx-7} ${cy-7} L${cx+7} ${cy-3}" stroke="${LN}" stroke-width="3" stroke-linecap="round" transform="${cx<100?'':`translate(${2*cx} 0) scale(-1 1)`}"/>`;
+      default: return '';
+    }
+  };
+  return one(L)+one(R);
+}
+
+/* 口 */
+function mouth(who,kind,y){
+  const x=100, s = who==='gon'?1.3:1;
+  switch(kind){
+    case 'closed': return `<path d="M${x-4*s} ${y} Q${x} ${y+2.5} ${x+4*s} ${y}" stroke="${LN}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+    case 'smile': return `<path d="M${x-6*s} ${y-1} Q${x} ${y+5.5} ${x+6*s} ${y-1}" stroke="${LN}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
+    case 'smirk': return `<path d="M${x-5*s} ${y+1.5} Q${x+2} ${y+4.5} ${x+7*s} ${y-2}" stroke="${LN}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
+    case 'wavy': return `<path d="M${x-7*s} ${y} q2.4 3.4 4.8 0 t4.8 0 t4.8 0" stroke="${LN}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+    case 'oo': return `<ellipse cx="${x}" cy="${y+1}" rx="${3.4*s}" ry="4.2" fill="#d98a80" stroke="${LN}" stroke-width="2"/>`;
+    case 'open': return `<path d="M${x-7*s} ${y-1} Q${x} ${y+10} ${x+7*s} ${y-1} Q${x} ${y+2} ${x-7*s} ${y-1} Z" fill="#d98a80" stroke="${LN}" stroke-width="2.2" stroke-linejoin="round"/>`;
+    case 'grin': return `<path d="M${x-9*s} ${y-2} Q${x} ${y+11} ${x+9*s} ${y-2} Q${x} ${y+2} ${x-9*s} ${y-2} Z" fill="#d98a80" stroke="${LN}" stroke-width="2.2" stroke-linejoin="round"/>
+      <path d="M${x-7.5*s} ${y-0.5} Q${x} ${y+2.5} ${x+7.5*s} ${y-0.5} L${x+6*s} ${y+1.8} Q${x} ${y+4.5} ${x-6*s} ${y+1.8} Z" fill="#fff"/>`;
+    case 'shout': return `<path d="M${x-8*s} ${y-4} Q${x} ${y-7} ${x+8*s} ${y-4} Q${x+9*s} ${y+6} ${x} ${y+9} Q${x-9*s} ${y+6} ${x-8*s} ${y-4} Z" fill="#d98a80" stroke="${LN}" stroke-width="2.2" stroke-linejoin="round"/>`;
+    default: return '';
+  }
+}
+
+/* キャラ本体（2.5頭身・ふんわり・首なし） */
+function drawChar(who,expr='normal',opt={}){
+  const c=CH[who], E=EXPR[expr]||EXPR.normal;
+  let p=[];
+  const eyeY = 92, mouthY = 116;
+
+  /* --- 体（小さめ・丸い） --- */
+  if(who==='ren'){
+    p.push(`<path d="M100 148 C76 149 62 158 58 228 L142 228 C138 158 124 149 100 148 Z" fill="${c.cloth}" stroke="${LN}" stroke-width="2.4" stroke-linejoin="round"/>
+      <path d="M88 151 L100 166 L112 151" stroke="${c.cloth2}" stroke-width="4" fill="none" stroke-linecap="round"/>`);
+  }else if(who==='dai'){
+    p.push(`<path d="M100 147 C72 148 58 158 54 228 L146 228 C142 158 128 148 100 147 Z" fill="${c.cloth}" stroke="${LN}" stroke-width="2.4" stroke-linejoin="round"/>
+      <path d="M78 156 C78 147 122 147 122 156" fill="none" stroke="${c.cloth2}" stroke-width="3.4"/>
+      <path d="M92 160 L91 180 M108 160 L109 180" stroke="#fffdf8" stroke-width="2.4" stroke-linecap="round"/>`);
+  }else if(who==='gon'){
+    p.push(`<path d="M100 146 C68 148 52 158 48 228 L152 228 C148 158 132 148 100 146 Z" fill="${c.skin}" stroke="${LN}" stroke-width="2.4" stroke-linejoin="round"/>
+      <path d="M66 172 L66 228 L134 228 L134 172 C116 182 84 182 66 172 Z" fill="${c.cloth}" stroke="${LN}" stroke-width="2.2" stroke-linejoin="round"/>
+      <path d="M82 158 Q100 172 118 158" stroke="#e0b64e" stroke-width="3.2" fill="none"/>
+      <circle cx="100" cy="167" r="2.8" fill="#e0b64e"/>`);
+  }else{
+    p.push(`<path d="M100 148 C78 149 64 158 60 228 L140 228 C136 158 122 149 100 148 Z" fill="${c.cloth}" stroke="${LN}" stroke-width="2.4" stroke-linejoin="round"/>
+      <path d="M88 151 C92 159 108 159 112 151" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/>
+      <circle cx="100" cy="168" r="2.2" fill="${c.cloth2}"/><circle cx="100" cy="182" r="2.2" fill="${c.cloth2}"/>`);
+  }
+
+  /* --- ぴよの後ろ髪（頭より奥） --- */
+  if(who==='piyo'){
+    p.push(`<path d="M148 76 C168 86 174 118 166 146 C162 162 152 172 146 176 C152 152 152 126 144 106 C141 96 142 84 144 78 Z" fill="${c.hair}" stroke="${LN}" stroke-width="2.2" stroke-linejoin="round"/>
+      <circle cx="147" cy="82" r="6.5" fill="#f28aa2" stroke="${LN}" stroke-width="2"/>`);
+  }
+
+  /* --- 頭（大きくて丸い・首なしでぽんと乗る） --- */
+  p.push(`<ellipse cx="100" cy="86" rx="58" ry="54" fill="${c.skin}" stroke="${LN}" stroke-width="2.5"/>`);
+
+  /* --- 髪 --- */
+  if(who==='ren'){
+    p.push(`<path d="M43 92 C40 48 66 30 100 30 C134 30 160 48 157 92 C154 80 148 68 138 62 C140 72 137 79 131 83 C127 66 116 58 100 58 C84 58 73 66 69 83 C63 79 60 72 62 62 C52 68 46 80 43 92 Z" fill="${c.hair}" stroke="${LN}" stroke-width="2.4" stroke-linejoin="round"/>
+      <path d="M43 90 C42 102 44 110 48 116 C50 105 50 97 52 90 Z" fill="${c.hair}" stroke="${LN}" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M157 90 C158 102 156 110 152 116 C150 105 150 97 148 90 Z" fill="${c.hair}" stroke="${LN}" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M72 44 C84 37 116 37 128 44" stroke="${c.hairHi}" stroke-width="4" fill="none" opacity=".9" stroke-linecap="round"/>
+      <circle cx="156" cy="104" r="2.8" fill="none" stroke="#e0b64e" stroke-width="2"/>`);
+  }
+  if(who==='dai'){
+    p.push(`<path d="M44 96 C40 50 66 30 100 30 C134 30 160 50 156 96 L149 84 L145 94 L139 76 L132 89 L126 71 L118 86 L111 67 L103 84 L95 68 L88 88 L80 73 L74 92 L66 80 L60 95 L52 85 Z" fill="${c.hair}" stroke="${LN}" stroke-width="2.4" stroke-linejoin="round"/>
+      <path d="M99 31 C95 20 108 16 105 26 C111 21 115 28 107 31" fill="none" stroke="${LN}" stroke-width="2.6" stroke-linecap="round"/>`);
+  }
+  if(who==='gon'){
+    p.push(`<path d="M45 80 C48 44 70 28 100 28 C130 28 152 44 155 80 L147 72 L143 82 L136 68 L129 80 L122 64 L115 78 L108 62 L100 76 L92 62 L85 78 L78 64 L71 80 L64 68 L57 82 L49 72 Z" fill="${c.hair}" stroke="${LN}" stroke-width="2.4" stroke-linejoin="round"/>`);
+  }
+  if(who==='piyo'){
+    p.push(`<path d="M46 92 C44 52 68 34 100 34 C132 34 156 52 154 92 C148 80 143 74 138 86 C133 70 126 64 119 82 C113 66 105 66 99 82 C92 64 85 70 80 86 C75 74 68 80 63 92 C58 84 52 87 46 92 Z" fill="${c.hair}" stroke="${LN}" stroke-width="2.4" stroke-linejoin="round"/>
+      <path d="M72 46 C82 40 118 40 128 46" stroke="${c.hairHi}" stroke-width="3.6" fill="none" opacity=".9" stroke-linecap="round"/>`);
+  }
+
+  /* --- 顔パーツ --- */
+  p.push(eyes(who,E.e,eyeY));
+  // 鼻
+  if(who==='gon') p.push(`<ellipse cx="100" cy="104" rx="7" ry="5.5" fill="${c.skin}" stroke="${LN}" stroke-width="2.2"/>`);
+  else if(who==='dai') p.push(`<circle cx="100" cy="104" r="3" fill="none" stroke="${LN}" stroke-width="1.8"/>`);
+  else p.push(`<path d="M100 101 q1.8 2.6 0 4.6" stroke="${LN}" stroke-width="1.6" fill="none" stroke-linecap="round"/>`);
+  p.push(mouth(who,E.m,mouthY));
+
+  // ほっぺ
+  const blushAll = who==='piyo' || E.m==='smile' || E.m==='open' || expr==='cry' || expr==='soft' || expr==='happy';
+  if(blushAll) p.push(`<ellipse cx="66" cy="106" rx="8" ry="4.5" fill="#f5b8b0" opacity=".8"/><ellipse cx="134" cy="106" rx="8" ry="4.5" fill="#f5b8b0" opacity=".8"/>`);
+
+  /* --- キャラ固有 --- */
+  if(who==='dai'){
+    let st='';
+    for(let i=0;i<9;i++){const a=Math.PI*(0.25+0.5*sr(i));const r=24+sr(i+40)*5;
+      st+=`<circle cx="${100+Math.cos(a)*r}" cy="${116+Math.sin(a)*r*0.5}" r="1.1" fill="${LN}" opacity=".55"/>`;}
+    p.push(st);
+    p.push(`<g fill="none" stroke="${LN}" stroke-width="2.4">
+      <circle cx="82" cy="92" r="13"/><circle cx="118" cy="92" r="13"/>
+      <path d="M95 92 Q100 89 105 92 M69 90 L58 87 M131 90 L142 87"/></g>`);
+  }
+  if(who==='gon'){
+    let st='';
+    for(let i=0;i<13;i++){const a=Math.PI*(0.18+0.64*sr(i+7));const r=30+sr(i+80)*7;
+      st+=`<circle cx="${100+Math.cos(a)*r}" cy="${118+Math.sin(a)*r*0.55}" r="1.25" fill="${LN}" opacity=".6"/>`;}
+    p.push(st);
+    p.push(`<circle cx="123" cy="112" r="1.8" fill="${LN}" opacity=".8"/>`);
+    p.push(`<path d="M78 76 L92 80 M122 80 L136 76" stroke="${LN}" stroke-width="3.4" stroke-linecap="round"/>`);
+  }
+
+  /* --- 表情エフェクト --- */
+  if(E.tear) p.push(`<path d="M72 100 q-4 9 0 14 q5 -5 0 -14 M128 100 q4 9 0 14 q-5 -5 0 -14" fill="#a8d8ee" stroke="#7cb8d8" stroke-width="1.4"/>`);
+  if(E.sweat) p.push(`<path d="M152 66 q6 9 0 13 q-7 -4 0 -13" fill="#c2e4f2" stroke="#8ec4dc" stroke-width="1.6"/>`);
+  if(expr==='smug') p.push(`<path d="M162 56 l1.8 4 4 1.8 -4 1.8 -1.8 4 -1.8 -4 -4 -1.8 4 -1.8 z" fill="#f2d98a"/>`);
+
+  return `<svg viewBox="0 0 200 230" ${opt.flip?'style="transform:scaleX(-1)"':''}>${p.join('')}</svg>`;
+}
+
+/* ============ 背景シーン（淡い色彩） ============ */
+function focusLines(color,cx,cy,n,inner){
+  let s='';
+  for(let i=0;i<n;i++){
+    const a=i/n*Math.PI*2, j=sr(i)*0.04, ir=inner+sr(i+99)*46;
+    const x1=cx+Math.cos(a)*ir, y1=cy+Math.sin(a)*ir;
+    const x2=cx+Math.cos(a-0.025-j)*560, y2=cy+Math.sin(a-0.025-j)*560;
+    const x3=cx+Math.cos(a+0.025+j)*560, y3=cy+Math.sin(a+0.025+j)*560;
+    s+=`<polygon points="${x1},${y1} ${x2},${y2} ${x3},${y3}" fill="${color}"/>`;
+  }
+  return s;
+}
+function svgScene(inner){ return `<svg class="scene" viewBox="0 0 400 260" preserveAspectRatio="xMidYMid slice">${inner}</svg>`; }
+
+const SCENES={
+  flat(){ return svgScene(`<rect width="400" height="260" fill="#fdf8ee"/>
+    <circle cx="30" cy="30" r="26" fill="#f5ecd8" opacity=".8"/>
+    <circle cx="375" cy="235" r="30" fill="#f5ecd8" opacity=".8"/>`);},
+  focus(){ return svgScene(`<rect width="400" height="260" fill="#fdf8ee"/>${focusLines('#c9b394',200,128,30,90)}`);},
+  focusDark(){ return svgScene(`<rect width="400" height="260" fill="#8a745e"/>${focusLines('#fdf4dc',200,120,28,95)}`);},
+  soft(){ let sp='';
+    for(let i=0;i<12;i++){const x=25+sr(i+3)*350,y=18+sr(i+30)*150,r=3+sr(i+60)*5;
+      sp+=`<path d="M${x} ${y-r} L${x+r*0.35} ${y-r*0.35} L${x+r} ${y} L${x+r*0.35} ${y+r*0.35} L${x} ${y+r} L${x-r*0.35} ${y+r*0.35} L${x-r} ${y} L${x-r*0.35} ${y-r*0.35} Z" fill="#f2d98a" opacity=".85"/>`;}
+    return svgScene(`<rect width="400" height="260" fill="#fdf3da"/>
+      <circle cx="200" cy="110" r="95" fill="#fbe9c2" opacity=".8"/>${sp}`);},
+  night(sign){
+    let b='';
+    const hs=[105,66,135,86,115,76];
+    for(let k=0;k<6;k++){
+      const bx=k*70-10,bw=64,bh=hs[k],by=260-bh-40;
+      b+=`<rect x="${bx}" y="${by}" width="${bw}" height="${bh+40}" rx="3" fill="#39405e"/>`;
+      for(let wy=0;wy<4;wy++)for(let wx=0;wx<3;wx++){
+        if(sr(k*31+wy*7+wx)>0.45) b+=`<rect x="${bx+9+wx*18}" y="${by+10+wy*22}" width="10" height="12" rx="2" fill="#f7d98a" opacity="${0.55+sr(k+wx+wy)*0.45}"/>`;
+      }
+    }
+    let st='';
+    for(let i=0;i<22;i++) st+=`<circle cx="${sr(i)*400}" cy="${sr(i+50)*105}" r="${0.9+sr(i+9)*1.1}" fill="#fdf4dc" opacity=".9"/>`;
+    const sg = sign?`<g transform="rotate(-2 285 82)">
+      <path d="M232 0 L240 62 M340 0 L332 62" stroke="#8a745e" stroke-width="3"/>
+      <rect x="210" y="62" width="150" height="42" rx="6" fill="#fdf8ee" stroke="#5b4a40" stroke-width="2.6"/>
+      <text x="285" y="80" font-size="13.5" text-anchor="middle" fill="#5b4a40" font-weight="bold">シェアハウス空室あり</text>
+      <text x="285" y="97" font-size="11" text-anchor="middle" fill="#c25a4a" font-weight="bold">（訳あり歓迎）</text></g>`:'';
+    const moon = sign?'':`<circle cx="330" cy="46" r="20" fill="#fdf4dc"/><circle cx="322" cy="41" r="17" fill="#4d5578"/>`;
+    return svgScene(`<rect width="400" height="260" fill="#4d5578"/>${st}${moon}${b}
+      <rect y="252" width="400" height="8" fill="#2f3550"/>${sg}`);},
+  nightSign(){ return SCENES.night(true); },
+  door(){ return svgScene(`<rect width="400" height="260" fill="#efe4cc"/>
+    <rect x="0" y="236" width="400" height="24" fill="#d9c5a0"/>
+    <rect x="215" y="14" width="150" height="230" rx="4" fill="#c69a6e" stroke="#8a6a48" stroke-width="4"/>
+    <rect x="232" y="34" width="116" height="86" rx="3" fill="none" stroke="#a5825e" stroke-width="3.4"/>
+    <rect x="232" y="138" width="116" height="86" rx="3" fill="none" stroke="#a5825e" stroke-width="3.4"/>
+    <circle cx="352" cy="132" r="6" fill="#e0b64e"/>
+    <g transform="rotate(3 290 80)"><rect x="248" y="52" width="84" height="56" rx="2" fill="#fffdf8" stroke="#b9a488" stroke-width="2"/>
+      <rect x="278" y="44" width="26" height="12" rx="2" fill="#e8dcc4" opacity=".9"/>
+      <text x="290" y="90" font-size="26" text-anchor="middle" fill="#c25a4a" font-weight="900">退去</text></g>`);},
+  stairs(){ let steps='';
+    for(let i=0;i<7;i++){ const x=40+i*46,y=250-i*30;
+      steps+=`<path d="M${x} ${y} L${x+46} ${y} L${x+46} ${y-30}" fill="none" stroke="#c9b394" stroke-width="5" stroke-linecap="round"/>`;}
+    return svgScene(`<rect width="400" height="260" fill="#f2e8d2"/>${steps}
+      <path d="M30 240 L330 40" stroke="#a08a70" stroke-width="6" stroke-linecap="round"/>
+      <path d="M60 250 L60 212 M130 250 L130 170 M200 250 L200 124 M270 250 L270 80" stroke="#a08a70" stroke-width="3.6"/>
+      <rect x="330" y="20" width="52" height="70" rx="4" fill="#fbe9c2" opacity=".9"/>`);},
+  room(){ return svgScene(`<rect width="400" height="260" fill="#f9f0dc"/>
+    <rect y="190" width="400" height="70" fill="#e8d0a8"/>
+    <path d="M0 190 H400" stroke="#c9ae84" stroke-width="3"/>
+    <path d="M0 216 H400 M0 238 H400" stroke="#dbc094" stroke-width="2"/>
+    <rect x="18" y="28" width="92" height="110" rx="4" fill="#7d86a8" stroke="#a08a70" stroke-width="5"/>
+    <path d="M64 28 V138 M18 83 H110" stroke="#a08a70" stroke-width="3.6"/>
+    <circle cx="88" cy="52" r="8" fill="#fdf4dc" opacity=".95"/>
+    <rect x="302" y="62" width="74" height="92" rx="3" fill="#fffdf2" stroke="#c9b394" stroke-width="2.6" transform="rotate(2 339 108)"/>
+    <path d="M314 86 h50 M314 102 h50 M314 118 h32" stroke="#dbc9a8" stroke-width="4" transform="rotate(2 339 108)"/>
+    <path d="M200 0 L200 24" stroke="#a08a70" stroke-width="3"/>
+    <path d="M186 24 L214 24 L208 42 L192 42 Z" fill="#f2cf7a" stroke="#c9a45a" stroke-width="2"/>
+    <circle cx="200" cy="50" r="8" fill="#fbe9c2" opacity=".95"/>`);},
+  graph(){ return svgScene(`<rect width="400" height="260" fill="#f2e8d2"/>
+    <rect x="52" y="18" width="296" height="180" rx="6" fill="#fffdf8" stroke="#c9b394" stroke-width="6"/>
+    <path d="M84 168 L84 48 M84 168 L316 168" stroke="#8a745e" stroke-width="3.6"/>
+    <rect x="104" y="140" width="26" height="28" rx="3" fill="#9db4cc"/>
+    <rect x="146" y="118" width="26" height="50" rx="3" fill="#9db4cc"/>
+    <rect x="188" y="128" width="26" height="40" rx="3" fill="#9db4cc"/>
+    <path d="M96 150 C160 130 210 118 296 58" fill="none" stroke="#d97b6c" stroke-width="6.5" stroke-linecap="round"/>
+    <path d="M296 58 L274 58 M296 58 L292 80" stroke="#d97b6c" stroke-width="6.5" stroke-linecap="round"/>
+    <text x="252" y="112" font-size="26" fill="#d97b6c" font-weight="900" transform="rotate(-12 252 112)">需要</text>
+    <rect y="198" width="400" height="62" fill="#e8d0a8"/>`);},
+  morning(){ return svgScene(`<rect width="400" height="260" fill="#fdeecb"/>
+    <circle cx="200" cy="118" r="52" fill="#ffd485" opacity=".95"/>
+    <circle cx="200" cy="118" r="78" fill="#ffd485" opacity=".4"/>
+    <path d="M60 60 q10 -8 20 0 q10 -8 20 0 M300 40 q9 -7 18 0 q9 -7 18 0" stroke="#a08a70" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <path d="M20 0 V260 M380 0 V260 M20 130 H380" stroke="#dbc094" stroke-width="10"/>`);},
+  nabe(){ return SCENES.room(); }
+};
+
+const FG={
+  table(){ return `<svg class="scene" style="z-index:3" viewBox="0 0 400 260" preserveAspectRatio="xMidYMid slice">
+    <path d="M-10 212 Q200 194 410 212 L410 266 L-10 266 Z" fill="#d9ab74" stroke="#a5825e" stroke-width="3.4"/>
+    <ellipse cx="200" cy="212" rx="72" ry="19" fill="#7d86a8" stroke="#5b4a40" stroke-width="3.4"/>
+    <ellipse cx="200" cy="206" rx="62" ry="13" fill="#b48ac2"/>
+    <ellipse cx="182" cy="204" rx="8" ry="4" fill="#cfa8dc" opacity=".95"/>
+    <ellipse cx="214" cy="208" rx="10" ry="4.5" fill="#9a6cac"/>
+    <circle cx="200" cy="203" r="3.4" fill="#f2cf7a"/>
+    <path d="M172 190 C167 176 177 168 173 154 M200 188 C195 174 206 166 201 152 M228 190 C223 176 233 168 229 154" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round" opacity=".85"/>
+    <ellipse cx="96" cy="224" rx="20" ry="8" fill="#fffdf8" stroke="#c9b394" stroke-width="2.4"/>
+    <ellipse cx="304" cy="224" rx="20" ry="8" fill="#fffdf8" stroke="#c9b394" stroke-width="2.4"/>
+  </svg>`;}
+};
+
+/* ============ レンダラ ============ */
+function panel(p){
+  let inner=`<div class="stage">`;
+  if(p.scene && SCENES[p.scene]) inner+=SCENES[p.scene]();
+  (p.ch||[]).forEach(c=>{
+    const w=(c.w||46)*0.85;
+    inner+=`<div class="ch" style="left:${c.x}%;bottom:${c.b??0}%;width:${w}%;">${drawChar(c.who,c.e,{flip:c.flip})}</div>`;
+    if(c.tag) inner+=`<div class="name" style="left:${c.x+2}%;bottom:${(c.b??0)+2}%">${c.tag}</div>`;
+  });
+  if(p.fg && FG[p.fg]) inner+=FG[p.fg]();
+  (p.sfx||[]).forEach(s=>{
+    inner+=`<div class="sfx" style="left:${s.x}%;top:${s.y}%;font-size:${s.s||24}px;${s.r?`transform:rotate(${s.r}deg)`:''}">${s.t}</div>`;
+  });
+  (p.naru||[]).forEach(n=>{ inner+=`<div class="naru" style="${n.pos||'top:4%;left:4%'}">${n.t}</div>`; });
+  (p.bub||[]).forEach(b=>{
+    const cls=b.k==='think'?'bub think':b.k==='shout'?'bub shout':'bub';
+    inner+=`<div class="${cls}" style="${b.pos}">${b.t}</div>`;
+  });
+  inner+=`</div>`;
+  return `<div class="panel" style="flex-grow:${p.f||1};min-height:${(p.h||160)+30}px">${inner}</div>`;
+}
+function page(pg){
+  const rows=pg.rows.map(r=>`<div class="row">${r.map(panel).join('')}</div>`).join('');
+  return `<div class="page">${rows}<div class="pagenum">— ${pg.n} —</div></div>`;
+}
+
+/* ============ 台本データ ============ */
+const N=(t,pos)=>({t,pos});
+const B=(t,pos,extra={})=>({t,pos,...extra});
+
+const PAGES=[
+{n:1,rows:[
+  [{h:260,scene:'nightSign',
+    naru:[N('この街の路地裏に、<br>ちょっと変わった住人たちの家がある。','top:4%;left:3%')],
+    ch:[{who:'ren',e:'smug',x:6,b:0,w:27},{who:'gon',e:'grin',x:30,b:0,w:29},{who:'dai',e:'dead',x:55,b:0,w:28},{who:'piyo',e:'soft',x:77,b:0,w:26}]
+  }]],
+},
+{n:2,rows:[
+  [{f:1.2,h:210,scene:'door',
+    ch:[{who:'dai',e:'dead',x:6,b:0,w:46,tag:'大介'}],
+    bub:[B('九ヶ月だよ、九ヶ月。<br>家賃より先に人間として<br>溜まってるだろ。','top:5%;right:4%'),
+         B('ぐぅの音も出ない…','bottom:8%;left:5%')]},
+   {f:.8,h:210,scene:'flat',
+    ch:[{who:'dai',e:'dead',x:18,b:-8,w:70}],
+    bub:[B('二十八歳・無職・無貯金・無友達。<br><small>三冠王。</small>','top:5%;left:4%',{k:'think'})]}],
+  [{h:180,scene:'night',
+    ch:[{who:'dai',e:'dead',x:38,b:0,w:36,flip:true}],
+    bub:[B('引きこもりって、<br>家がないと成立しないんだな…','top:7%;right:4%',{k:'think'})],
+    sfx:[{t:'とぼ…',x:12,y:64,s:20,r:-4}]}],
+]},
+{n:3,rows:[
+  [{f:1,h:210,scene:'night',
+    ch:[{who:'dai',e:'dead',x:20,b:0,w:54}],
+    sfx:[{t:'ぐぅぅ',x:60,y:20,s:24,r:-6}],
+    bub:[B('三日ぶりの空腹。<br>もう…ここでいいや…','top:5%;left:4%')]},
+   {f:1,h:210,scene:'flat',
+    ch:[{who:'ren',e:'deadpan',x:24,b:0,w:52}],
+    bub:[B('こんなとこで死なれると、<br>通報が面倒なんだけど。','top:5%;right:4%')]}],
+  [{h:210,scene:'focusDark',
+    ch:[{who:'ren',e:'smug',x:31,b:0,w:42}],
+    bub:[B('天使…<br>いや、こんな柄の悪い天使いるか。','bottom:6%;left:4%',{k:'think'})]}],
+]},
+{n:4,rows:[
+  [{f:1,h:200,scene:'night',
+    ch:[{who:'ren',e:'deadpan',x:4,b:0,w:42},{who:'dai',e:'cry',x:52,b:0,w:42,flip:true}],
+    bub:[B('家なし？金なし？職は？','top:4%;right:3%'),
+         B('フルコンボだな。','bottom:6%;right:30%')]},
+   {f:.9,h:200,scene:'flat',
+    ch:[{who:'dai',e:'cry',x:22,b:0,w:54}],
+    sfx:[{t:'ぐすっ',x:62,y:18,s:20,r:-5}],
+    bub:[B('人の優しさ、<br>三年ぶりに摂取した…','top:5%;left:4%')]}],
+  [{h:190,scene:'night',
+    ch:[{who:'ren',e:'smug',x:10,b:0,w:34}],
+    bub:[B('上、シェアハウス。<br>今ちょうど一部屋空いてる。','top:5%;right:4%'),
+         B('うちは働けば住める。','bottom:7%;left:4%')]}],
+]},
+{n:5,rows:[
+  [{h:170,scene:'stairs',
+    ch:[{who:'ren',e:'normal',x:14,b:0,w:34,flip:true},{who:'dai',e:'dead',x:44,b:-6,w:34,flip:true}],
+    bub:[B('わらにもすがる、というか、<br>わらすらない。<br>イケメンにすがった。','top:5%;right:3%',{k:'think'})]}],
+  [{f:1.3,h:240,scene:'room',
+    ch:[{who:'gon',e:'grin',x:4,b:0,w:40,tag:'ゴン'},{who:'piyo',e:'soft',x:40,b:0,w:34,tag:'ぴよ'},{who:'dai',e:'shock',x:68,b:0,w:34,flip:true}],
+    bub:[B('おかえりレンちゃーん！<br>お、なんだそのお土産、<br>生ゴミ？','top:3%;right:3%'),
+         B('人間です。','bottom:6%;right:34%')]},
+   {f:.7,h:240,scene:'focus',
+    ch:[{who:'gon',e:'grin',x:12,b:-12,w:76}],
+    bub:[B('はじめまして。<br>権田。通称ゴン。<br>職業…お察しの通り。','top:4%;left:4%')]}],
+]},
+{n:6,rows:[
+  [{f:1.1,h:220,scene:'room',
+    ch:[{who:'gon',e:'smug',x:4,b:0,w:44},{who:'dai',e:'shock',x:56,b:0,w:38,flip:true}],
+    bub:[B('おい今「なんでこの顔で」<br>って思っただろ。','top:4%;right:3%'),
+         B('思ってないです','bottom:5%;left:4%')]},
+   {f:.9,h:220,scene:'graph',
+    ch:[{who:'gon',e:'yell',x:20,b:0,w:58}],
+    sfx:[{t:'需要ッ！',x:6,y:10,s:22,r:-6}],
+    bub:[B('この業界、顔じゃねぇんだよ。<br><small>需要だよ、需要。</small>','bottom:6%;right:3%',{k:'shout'})]}],
+  [{h:200,scene:'room',
+    ch:[{who:'piyo',e:'soft',x:8,b:0,w:42},{who:'dai',e:'dead',x:56,b:0,w:38,flip:true}],
+    bub:[B('あ、あたらしいひとだ〜。<br>おにいさん、かおが…<br>あんしんするかんじ〜。','top:4%;right:3%'),
+         B('遠回しに不細工って<br>言ってます…？','bottom:5%;left:3%')]}],
+]},
+{n:7,rows:[
+  [{f:1,h:200,scene:'flat',
+    ch:[{who:'piyo',e:'blank',x:22,b:0,w:54}],
+    bub:[B('ぶさいく…って、<br>なぁに？','top:5%;right:5%'),
+         B('純度が高い…','bottom:7%;left:4%',{k:'think'})]},
+   {f:1.1,h:200,scene:'room',
+    ch:[{who:'ren',e:'deadpan',x:4,b:0,w:40},{who:'gon',e:'grin',x:52,b:0,w:42}],
+    bub:[B('ぴよ。ここの家事担当。<br>頭は…まあ、平和だ。','top:4%;right:3%'),
+         B('カレーに砂糖と塩、<br>両方入れた女だ。','bottom:5%;left:3%')]}],
+  [{h:170,scene:'flat',
+    ch:[{who:'dai',e:'dead',x:36,b:0,w:34}],
+    bub:[B('イケメンのウリ専、不細工のウリ専、<br>頭の弱い女の子。','top:6%;right:4%',{k:'think'}),
+         B('属性の渋滞…','bottom:9%;left:5%',{k:'think'})]}],
+]},
+{n:8,rows:[
+  [{f:1,h:200,scene:'room',
+    ch:[{who:'ren',e:'normal',x:18,b:0,w:50}],
+    bub:[B('で。空いてる部屋、貸す。<br>条件は一個。','top:5%;right:4%')]},
+   {f:1,h:200,scene:'focus',
+    ch:[{who:'dai',e:'shock',x:20,b:0,w:52}],
+    sfx:[{t:'ごくり',x:64,y:16,s:20,r:-4}],
+    bub:[B('…体、売れって…？','bottom:7%;left:6%')]}],
+  [{f:1.1,h:200,scene:'flat',
+    ch:[{who:'ren',e:'deadpan',x:6,b:0,w:42},{who:'dai',e:'x',x:56,b:0,w:38,flip:true}],
+    bub:[B('売れるもんなら売ってみろ。<br>市場から通報が来る。','top:4%;right:3%'),
+         B('ぐはっ','bottom:8%;left:6%')]},
+   {f:.9,h:200,scene:'room',
+    ch:[{who:'ren',e:'smug',x:4,b:0,w:40},{who:'gon',e:'grin',x:52,b:0,w:42}],
+    bub:[B('掃除、受付、経理、送迎。<br>ゴンの汗を拭く係でもいい。','top:4%;right:3%'),
+         B('それは需要ある','bottom:6%;left:4%')]}],
+]},
+{n:9,rows:[
+  [{h:180,scene:'soft',
+    ch:[{who:'dai',e:'soft',x:30,b:0,w:44}],
+    bub:[B('三年間、天井のシミの数だけ数えて生きてきた。<br>「働け」って言われるの、久しぶりすぎて…','top:5%;right:3%',{k:'think'})]}],
+  [{f:1,h:200,scene:'flat',
+    ch:[{who:'dai',e:'cry',x:22,b:0,w:54}],
+    bub:[B('…なんか、うれし…','top:7%;right:6%')]},
+   {f:1.1,h:200,scene:'room',
+    ch:[{who:'gon',e:'grin',x:4,b:0,w:42},{who:'piyo',e:'soft',x:52,b:0,w:40}],
+    bub:[B('うわ泣いた。ブサイクが泣くと<br>情報量多いな。','top:4%;right:3%'),
+         B('うるさいですね！？','bottom:5%;left:4%',{k:'shout'})]}],
+]},
+{n:10,rows:[
+  [{f:1.1,h:210,scene:'room',
+    ch:[{who:'gon',e:'grin',x:4,b:0,w:46},{who:'dai',e:'shock',x:52,b:0,w:40,flip:true}],
+    bub:[B('よし決めた。坊主、<br>しばらく俺のマネージャーな。','top:4%;right:3%'),
+         B('勝手に決めないで…','bottom:5%;left:4%')]},
+   {f:.9,h:210,scene:'focus',
+    ch:[{who:'dai',e:'shock',x:22,b:0,w:54}],
+    sfx:[{t:'パンパン',x:60,y:14,s:20,r:-6}],
+    bub:[B('予約、埋まってる…<br>顔面偏差値と予約数が<br>反比例してる…','bottom:6%;left:4%',{k:'think'})]}],
+  [{h:180,scene:'soft',
+    ch:[{who:'ren',e:'soft',x:12,b:0,w:44}],
+    bub:[B('おもしろい顔してる。<br>ここ、向いてるかもな。','top:5%;right:4%'),
+         B('全然フォローに<br>なってないです','bottom:7%;left:4%')]}],
+]},
+{n:11,rows:[
+  [{f:1.3,h:240,scene:'room',fg:'table',
+    ch:[{who:'piyo',e:'soft',x:2,b:10,w:32},{who:'ren',e:'deadpan',x:28,b:10,w:30},{who:'gon',e:'grin',x:52,b:10,w:32},{who:'dai',e:'blank',x:76,b:10,w:30}],
+    sfx:[{t:'ぐつぐつ…',x:36,y:66,s:17,r:-3}],
+    bub:[B('げんきになるやつ、<br>いれといたよ〜','top:3%;left:3%'),
+         B('何を入れた。','top:3%;right:4%')]},
+   {f:.7,h:240,scene:'focus',
+    ch:[{who:'dai',e:'x',x:16,b:0,w:62}],
+    bub:[B('甘い…しょっぱい…<br>そして…元気になる<br><small>（動悸）</small>','top:4%;left:4%')]}],
+  [{h:180,scene:'soft',
+    ch:[{who:'piyo',e:'happy',x:4,b:0,w:26},{who:'gon',e:'grin',x:28,b:0,w:28},{who:'dai',e:'soft',x:52,b:0,w:26},{who:'ren',e:'soft',x:75,b:0,w:26}],
+    bub:[B('まともじゃない。<br>まともじゃないけど――','bottom:6%;left:4%',{k:'think'})]}],
+]},
+{n:12,rows:[
+  [{f:1,h:200,scene:'morning',
+    ch:[{who:'dai',e:'soft',x:26,b:0,w:48,flip:true}],
+    naru:[N('三年ぶりに、<br>「明日」があった。','top:5%;right:4%')]},
+   {f:1,h:200,scene:'room',
+    ch:[{who:'gon',e:'grin',x:2,b:0,w:36},{who:'ren',e:'smug',x:34,b:0,w:34},{who:'piyo',e:'soft',x:66,b:0,w:34}],
+    naru:[N('新しい名札「ダイスケ」','bottom:4%;right:4%')],
+    bub:[B('ようこそ、<br>ウリ専ハウスへ。','top:4%;right:3%'),
+         B('働けよ。','top:5%;left:3%'),
+         B('おかえり〜','bottom:22%;left:3%')]}],
+  [{f:1.4,h:170,scene:'flat',
+    ch:[{who:'ren',e:'smug',x:2,b:0,w:24},{who:'dai',e:'soft',x:26,b:0,w:24},{who:'gon',e:'grin',x:50,b:0,w:26},{who:'piyo',e:'happy',x:75,b:0,w:24}],
+    naru:[N('こうして、ダメな大人たちの<br>シェア生活が始まった。','top:5%;left:3%'),
+          N('次回「ゴンの指名客、来店。大介、初仕事」','bottom:5%;right:3%')]},
+   {f:.6,h:170,scene:'room',
+    ch:[{who:'piyo',e:'soft',x:18,b:0,w:58}],
+    sfx:[{t:'バリンッ',x:44,y:16,s:18,r:8}],
+    bub:[B('かびん、われてたから、<br>なおしといたよ〜','top:5%;left:4%')]}],
+]},
+];
+
+/* ============ 出力 ============ */
+let html=`<div class="cover">
+  <div class="sub">— 群像コメディ —</div>
+  <h1>ウリ専ハウスへようこそ</h1>
+  <div class="ep">第1話「ブサイク、拾われる」</div>
+  <div class="cast">
+    <div>${drawChar('piyo','soft')}</div>
+    <div>${drawChar('dai','dead')}</div>
+    <div>${drawChar('ren','smug')}</div>
+    <div>${drawChar('gon','grin')}</div>
+  </div>
+  <div class="sub">※右→左に読んでください</div>
+</div>`;
+html+=PAGES.map(page).join('');
+html+=`<div class="endcard">― 第1話 了 ―</div>`;
+html+=`<div class="page"><div class="note">
+  <h3>キャラ早見</h3>
+  <b>蓮（レン）</b>：イケメンウリ専・売上No.1。すまし顔にピアス、ネイビーのニット。<br>
+  <b>大介（ダイスケ）</b>：不細工引きこもり・視点キャラ。丸メガネ、無精ひげ、よれたパーカー。<br>
+  <b>ゴン（権田）</b>：不細工なのに指名殺到。「顔じゃねぇ、需要だよ」。角刈り、金のチェーン。<br>
+  <b>ぴよ（実咲）</b>：頭の弱い天然の家事担当。サイドポニーとほっぺの赤みがトレードマーク。
+</div></div>`;
+document.getElementById('book').innerHTML=html;
+</script>
+</body>
+</html>
