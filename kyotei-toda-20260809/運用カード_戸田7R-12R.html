@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>戸田 8/9 運用カード（ai-council v2版）</title>
+<style>
+  :root{
+    --bg:#0f1419; --card:#1a212b; --card2:#212a36; --line:#2e3a49;
+    --txt:#e8edf2; --sub:#9fb0c0; --gold:#f5c518; --red:#ff5a5f;
+    --blue:#4da6ff; --green:#38d39f; --purple:#b98bff; --dim:#6b7a8a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+    background:var(--bg); color:var(--txt); line-height:1.55;
+    padding:14px; max-width:820px; margin:0 auto; -webkit-font-smoothing:antialiased;
+  }
+  header{
+    text-align:center; padding:16px 12px; border-radius:16px; margin-bottom:12px;
+    background:linear-gradient(135deg,#1b2430,#12303a); border:1px solid var(--line);
+  }
+  header .cup{font-size:.78rem; color:var(--gold); font-weight:700; letter-spacing:.06em;}
+  header h1{font-size:1.35rem; margin:4px 0 2px;}
+  header .meta{font-size:.8rem; color:var(--sub);}
+  .banner{
+    background:var(--card); border:1px solid var(--line); border-left:4px solid var(--blue);
+    border-radius:10px; padding:11px 13px; margin-bottom:12px; font-size:.82rem; color:var(--sub);
+  }
+  .banner b{color:var(--txt);}
+  .banner .k{color:var(--gold); font-weight:700;}
+
+  .race{background:var(--card); border:1px solid var(--line); border-radius:13px; margin-bottom:12px; overflow:hidden;}
+  .race.hot{border-color:#c9962e; box-shadow:0 0 0 1px rgba(245,197,24,.22);}
+  .rhead{display:flex; align-items:center; gap:10px; padding:11px 13px; background:var(--card2); border-bottom:1px solid var(--line); flex-wrap:wrap;}
+  .rno{font-size:1.25rem; font-weight:800; color:var(--gold);}
+  .rtime{font-size:.76rem; color:var(--sub);}
+  .alloc{margin-left:auto; font-size:.78rem; background:rgba(245,197,24,.12); color:var(--gold); border:1px solid rgba(245,197,24,.35); border-radius:20px; padding:3px 11px; font-weight:700;}
+  .rbody{padding:11px 13px;}
+  .marks{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; font-size:.82rem;}
+  .mk{background:var(--card2); border:1px solid var(--line); border-radius:8px; padding:4px 9px;}
+  .mk .s{font-weight:800; margin-right:3px;}
+  .s-honmei{color:var(--gold);} .s-taikou{color:var(--blue);} .s-tanana{color:var(--green);} .s-jiku{color:#ff9d5c;} .s-ana{color:var(--purple);}
+
+  .tbl{border-top:1px dashed var(--line); padding-top:8px;}
+  .thd,.trow{display:grid; grid-template-columns:26px 1fr 44px 52px 66px; gap:6px; align-items:center;}
+  .thd{font-size:.68rem; color:var(--dim); padding:2px 0 6px; font-weight:700; letter-spacing:.02em;}
+  .trow{padding:5px 0; border-top:1px solid rgba(46,58,73,.5); font-size:.86rem;}
+  .trow .cb{font-family:"SF Mono",Menlo,Consolas,monospace; font-weight:700; letter-spacing:.04em;}
+  .trow .ku{color:var(--gold); font-weight:700; text-align:center;}
+  .trow .pr{color:var(--sub); text-align:center;}
+  .trow .od{color:#ff8a8d; font-weight:700; text-align:right; font-family:"SF Mono",Menlo,monospace;}
+  .trow.main{background:rgba(245,197,24,.05);}
+  input[type=checkbox]{width:17px; height:17px; accent-color:var(--gold);}
+  .rnote{font-size:.76rem; color:var(--sub); margin-top:8px;}
+  .rnote b{color:#ffb14d;}
+
+  .branch{background:#241a1a; border:1px solid #5a3030; border-radius:11px; padding:12px 13px; margin-bottom:12px;}
+  .branch h3{font-size:.9rem; color:#ff8a8d; margin-bottom:8px;}
+  .branch table{width:100%; border-collapse:collapse; font-size:.78rem;}
+  .branch td{padding:5px 6px; border-top:1px solid #4a2a2a; vertical-align:top;}
+  .branch td:first-child{color:var(--gold); font-weight:700; white-space:nowrap; width:38%;}
+
+  .rules{background:var(--card); border:1px solid var(--line); border-radius:13px; padding:14px; margin-bottom:12px; font-size:.83rem; color:var(--sub);}
+  .rules h3{font-size:.92rem; color:var(--txt); margin:12px 0 7px;}
+  .rules h3:first-child{margin-top:0;}
+  .rules ol{margin:0 0 4px 1.1em;} .rules li{margin-bottom:6px;}
+  .rules b{color:var(--txt);}
+  .formula{background:#0c1b25; border:1px solid var(--line); border-radius:8px; padding:8px 11px; font-size:.8rem; color:var(--txt); margin:6px 0;}
+  .chk{list-style:none; margin:0; padding:0;}
+  .chk li{display:flex; gap:8px; align-items:flex-start; padding:5px 0; border-top:1px solid rgba(46,58,73,.5); font-size:.83rem;}
+  .chk li:first-child{border-top:none;}
+  .disclaim{text-align:center; font-size:.74rem; color:var(--dim); margin-top:12px; padding-bottom:8px;}
+  .legend{display:flex; flex-wrap:wrap; gap:8px 16px; justify-content:center; font-size:.76rem; color:var(--sub); margin-bottom:12px; padding:9px; background:var(--card); border-radius:10px; border:1px solid var(--line);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="cup">🏁 アサヒスーパードライカップ ・ 最終日</div>
+  <h1>戸田 7R–12R 運用カード</h1>
+  <div class="meta">2026/8/9(日) ／ ai-council v2 予想ベース ＋ 当日オッズ運用UI</div>
+</header>
+
+<div class="banner">
+  <b>これは何か：</b> ai-council v2（議長Claude／提案GPT／査読Claude）の買い目を、当日オッズを入れて使える運用カードに再構成したもの。<b>印・口数・想定確率は原文のまま</b>。追加したのは各点の<span class="k">「買う下限オッズ＝1.2÷想定確率」</span>と、§6補正・§7規律・7R→11R分岐・チェックリストの実行UIのみ。<br>
+  <b>1口＝総予算の1%</b>（例：予算1万円→1口100円）。前日に確定しているのは<b>買い目集合・口数上限・想定確率</b>であって、無条件の投資指示ではない。<b>各点は当日オッズが「下限オッズ」以上のときだけ買う</b>（＝想定確率×オッズ≥1.2）。
+</div>
+
+<div class="legend">
+  <span><b class="s-honmei">◎</b>本命</span>
+  <span><b class="s-taikou">○</b>対抗</span>
+  <span><b class="s-tanana">▲</b>単穴</span>
+  <span><b class="s-jiku">軸</b></span>
+  <span><b class="s-ana">穴</b></span>
+  <span>☑＝購入チェック（当日タップ用）</span>
+</div>
+
+<!-- 7R -->
+<div class="race">
+  <div class="rhead"><span class="rno">7R</span><span class="rtime">締切 13:45 ／ 企画・ウインウイン7</span><span class="alloc">15口</span></div>
+  <div class="rbody">
+    <div class="marks">
+      <span class="mk"><span class="s s-honmei">◎</span>1 大平</span>
+      <span class="mk"><span class="s s-taikou">○</span>3 中里</span>
+      <span class="mk"><span class="s s-tanana">▲</span>4 栗原</span>
+      <span class="mk" style="color:var(--dim)">消 6 滝沢</span>
+    </div>
+    <div class="tbl">
+      <div class="thd"><span>買</span><span>買い目</span><span>口</span><span>想定%</span><span>下限倍</span></div>
+      <div class="trow main"><input type="checkbox"><span class="cb">1-3-5</span><span class="ku">3</span><span class="pr">8%</span><span class="od">15.0</span></div>
+      <div class="trow main"><input type="checkbox"><span class="cb">1-5-3</span><span class="ku">3</span><span class="pr">7%</span><span class="od">17.1</span></div>
+      <div class="trow main"><input type="checkbox"><span class="cb">1-3-4</span><span class="ku">2</span><span class="pr">6%</span><span class="od">20.0</span></div>
+      <div class="trow main"><input type="checkbox"><span class="cb">3-1-5</span><span class="ku">2</span><span class="pr">5%</span><span class="od">24.0</span></div>
+      <div class="trow"><input type="checkbox"><span class="cb">1-4-3</span><span class="ku">1</span><span class="pr">5%</span><span class="od">24.0</span></div>
+      <div class="trow"><input type="checkbox"><span class="cb">1-5-4</span><span class="ku">1</span><span class="pr">4%</span><span class="od">30.0</span></div>
+      <div class="trow"><input type="checkbox"><span class="cb">1-3-2</span><span class="ku">1</span><span class="pr">5%</span><span class="od">24.0</span></div>
+      <div class="trow"><input type="checkbox"><span class="cb">3-1-4</span><span class="ku">1</span><span class="pr">3%</span><span class="od">40.0</span></div>
+      <div class="trow"><input type="checkbox"><span class="cb">4-1-3</span><span class="ku">1</span><span class="pr">3%</span><span class="od">40.0</span></div>
+    </div>
+    <div class="rnote">想定1着率 大平55%。エッジ＝②星野が枠で2着に買われる分 <b>1-3-x / 1-5-x が割安</b>。</div>
+  </div>
+</div>
+
+<!-- 8R -->
+<div class="race">
+  <div class="rhead"><span class="rno">8R</span><span class="rtime">締切 14:16 ／ 一般戦</span><span class="alloc">8口</span></div>
+  <div class="rbody">
+    <div class="marks">
+      <span class="mk"><span class="s s-honmei">◎</span>1 楠</span>
+      <span class="mk"><span class="s s-taikou">○</span>6 麻生<span style="color:var(--dim)">(頭より連下)</span></span>
+      <span class="mk"><span class="s s-tanana">▲</span>3 長畑</span>
+    </div>
+    <div class="tbl">
+      <div class="thd"><span>買</span><span>買い目</span><span>口</span><span>想定%</span><span>下限倍</span></div>
+      <div class="trow main"><input type="checkbox"><span class="cb">1-6-3</span><span class="ku">2</span><span class="pr">9%</span><span class="od">13.3</span></div>
+      <div class="trow main"><input type="checkbox"><span class="cb">6-1-3</span><span class="ku">2</span><span class="pr">6%</span><span class="od">20.0</span></div>
+      <div class="trow"><input type="checkbox"><span class="cb">1-3-6</span><span class="ku">1</span><span class="pr">6%</span><span class="od">20.0</span></div>
+      <div class="trow"><input type="checkbox"><span class="cb">1-6-5</span><span class="ku">1</span><span class="pr">5%</span><span class="od">24.0</span></div>
+      <div class="trow"><input type="checkbox"><span class="cb">1-3-5</span><span class="ku">1</span><span class="pr">4%</span><span class="od">30.0</span></div>
+      <div class="trow"><input type="checkbox"><span class="cb">3-1-6</span><span class="ku">1</span><span class="pr">4%</span><span class="od">30.0</span></div>
+    </div>
+    <div class="rnote">両席は見送り推奨、議長が薄く採用。<b>欠場確認（④中岡＝転覆翌日）。買わない選択も正当。</b></div>
+  </div>
+</div>
+
+<!-- 9R -->
+<div class="race hot">
+  <div class="rhead"><span class="rno">9R</span><span class="rtime">締切 14:48 ／ 特選</span><span class="alloc">10口</span></div>
+  <div class="rbody">
+    <div class="marks">
+      <span class="mk"><span class="s s-honmei">◎</span>1 奥田</span>
+      <span class="mk"><span class="s s-taikou">○</span>4 松村</span>
+      <span class="mk"><span class="s s-tanana">▲</span>3 小川</span>
+    </div>
+    <div class="tbl">
+      <div class="thd"><span>買</span><span>買い目</span><span>口</span><span>想定%</span><span>下限倍</span></div>
+      <div class="trow main"><input type="checkbox"><span class="cb">1-4-3</span><span class="ku">3</span><span class="pr">10%</span><span class="od">12.0</span></div>
+      <div class="trow main"><input type="checkbox"><span class="cb">1-3-4</span><span class="ku">2</span><span class="pr">8%</span><span class="od">15.0</span></div>
+      <div class="trow main"><input type="checkbox"><span class="cb">4-1-3</span><span class="ku">2</span><span class="pr">6%</span><span class="od">20.0</span></div>
+      <div class="trow"><input type="checkbox"><span class="cb">1-4-2</span><span class="ku">1</span><span class="pr">5%</span><span class="od">24.0</span></div>
+      <div class="trow"><input type="checkbox"><span class="cb">3-1-4</span><span class="ku">1</span><span class="pr">4%</span><span class="od">30.0</span></div>
+      <div class="trow"><input type="checkbox"><span class="cb">4-3-1</span><span class="ku">1</span><span class="pr">3%</span><span class="od">40.0</span></div>
+    </div>
+    <div class="rnote">エッジ＝松村は今節0連対で売れにくいが<b>4コース23走で65.2%は本物</b>。人気ギャップの典型。</div>
+  </div>
+</div>
+
+<!-- 10R -->
+<div class="race hot">
+  <div class="rhead"><span class="rno">10R</span><span class="rtime">締切 15:21 ／ 選抜戦</span><span class="alloc">18口</span></div>
+  <div class="rbody">
+    <div class="marks">
+      <span class="mk"><span class="s s-jiku">軸</span>1 向井田</span>
+      <span class="mk"><span class="s s-taikou">○</span>2 湯川</span>
+      <span class="mk"><span class="s s-tanana">▲</span>3 谷津</span>
+      <span class="mk" style="color:var(--dim)">4・5・6 全消し</span>
+    </div>
+    <div class="tbl">
+      <div class="thd"><span>買</span><span>買い目</span><span>口</span><span>想定%</span><span>下限倍</span></div>
+      <div class="trow main"><input type="checkbox"><span class="cb">1-2-3</span><span class="ku">3</span><span class="pr">12%</span><span class="od">10.0</span></div>
+      <div class="trow main"><input type="checkbox"><span class="cb">1-3-2</span><span class="ku">3</span><span class="pr">10%</span><span class="od">12.0</span></div>
+      <div class="trow main"><input type="checkbox"><span class="cb">2-1-3</span><span class="ku">3</span><span class="pr">9%</span><span class="od">13.3</span></div>
+      <div class="trow main"><input type="checkbox"><span class="cb">3-1-2</span><span class="ku">3</span><span class="pr">8%</span><span class="od">15.0</span></div>
+      <div class="trow"><input type="checkbox"><span class="cb">2-3-1</span><span class="ku">2</span><span class="pr">6%</span><span class="od">20.0</span></div>
+      <div class="trow"><input type="checkbox"><span class="cb">3-2-1</span><span class="ku">2</span><span class="pr">6%</span><span class="od">20.0</span></div>
+      <div class="trow"><input type="checkbox"><span class="cb">1-2-5</span><span class="ku">1</span><span class="pr">4%</span><span class="od">30.0</span></div>
+      <div class="trow"><input type="checkbox"><span class="cb">2-1-4</span><span class="ku">1</span><span class="pr">3%</span><span class="od">40.0</span></div>
+    </div>
+    <div class="rnote">1・2・3の3艇に集約。荒れ根拠が最も明確なレース（配分2位）。</div>
+  </div>
+</div>
+
+<!-- 11R -->
+<div class="race hot">
+  <div class="rhead"><span class="rno">11R</span><span class="rtime">締切 15:55 ／ 選抜戦 ※7R後に購入</span><span class="alloc">14口</span></div>
+  <div class="rbody">
+    <div class="marks">
+      <span class="mk"><span class="s s-honmei">◎</span>2 前出</span>
+      <span class="mk"><span class="s s-taikou">○</span>3 森高</span>
+      <span class="mk"><span class="s s-jiku">軸</span>1 福田</span>
+      <span class="mk"><span class="s s-ana">穴</span>5 大平</span>
+      <span class="mk" style="color:var(--dim)">④中村 全消し</span>
+    </div>
+    <div class="tbl">
+      <div class="thd"><span>買</span><span>買い目</span><span>口</span><span>想定%</span><span>下限倍</span></div>
+      <div class="trow main"><input type="checkbox"><span class="cb">1-2-3</span><span class="ku">2</span><span class="pr">9%</span><span class="od">13.3</span></div>
+      <div class="trow main"><input type="checkbox"><span class="cb">1-3-2</span><span class="ku">2</span><span class="pr">8%</span><span class="od">15.0</span></div>
+      <div class="trow main"><input type="checkbox"><span class="cb">2-1-3</span><span class="ku">2</span><span class="pr">8%</span><span class="od">15.0</span></div>
+      <div class="trow main"><input type="checkbox"><span class="cb">3-1-2</span><span class="ku">2</span><span class="pr">7%</span><span class="od">17.1</span></div>
+      <div class="trow"><input type="checkbox"><span class="cb">2-3-1</span><span class="ku">1</span><span class="pr">5%</span><span class="od">24.0</span></div>
+      <div class="trow"><input type="checkbox"><span class="cb">3-2-1</span><span class="ku">1</span><span class="pr">5%</span><span class="od">24.0</span></div>
+      <div class="trow"><input type="checkbox"><span class="cb">1-2-5</span><span class="ku">1</span><span class="pr">4%</span><span class="od">30.0</span></div>
+      <div class="trow"><input type="checkbox"><span class="cb">1-3-5</span><span class="ku">1</span><span class="pr">4%</span><span class="od">30.0</span></div>
+      <div class="trow"><input type="checkbox"><span class="cb">2-1-5</span><span class="ku">1</span><span class="pr">3%</span><span class="od">40.0</span></div>
+      <div class="trow"><input type="checkbox"><span class="cb">3-2-5</span><span class="ku">1</span><span class="pr">3%</span><span class="od">40.0</span></div>
+    </div>
+    <div class="rnote"><b>⑤大平は7Rの1号艇。下の分岐を確定してから購入すること。</b></div>
+  </div>
+</div>
+
+<div class="branch">
+  <h3>⑤大平の7R結果 → 11R分岐（購入前に必ず実行）</h3>
+  <table>
+    <tr><td>3着以内</td><td>上の14口をそのまま購入</td></tr>
+    <tr><td>4着以下 かつ ST.18以上</td><td><b>1-2-5 / 1-3-5 / 2-1-5 / 3-2-5</b> の4口を、3着⑤→⑥に差し替え（<b>1-2-6 / 1-3-6 / 2-1-6 / 3-2-6</b>）。他は変更なし</td></tr>
+    <tr><td>F・転覆・落水・欠場</td><td>11Rは<b>全券購入中止</b>。14口は留保へ戻す</td></tr>
+  </table>
+</div>
+
+<!-- 12R -->
+<div class="race hot">
+  <div class="rhead"><span class="rno">12R</span><span class="rtime">締切 16:30 ／ 優勝戦</span><span class="alloc">27口（最厚）</span></div>
+  <div class="rbody">
+    <div class="marks">
+      <span class="mk"><span class="s s-honmei">◎</span>1 木下</span>
+      <span class="mk"><span class="s s-taikou">○</span>2 中村晃</span>
+      <span class="mk"><span class="s s-tanana">▲</span>3 西岡</span>
+      <span class="mk"><span class="s s-jiku">連</span>4 小池</span>
+      <span class="mk"><span class="s s-ana">穴</span>6 岡村</span>
+    </div>
+    <div class="tbl">
+      <div class="thd"><span>買</span><span>買い目</span><span>口</span><span>想定%</span><span>下限倍</span></div>
+      <div class="trow main"><input type="checkbox"><span class="cb">1-2-3</span><span class="ku">3</span><span class="pr">11%</span><span class="od">10.9</span></div>
+      <div class="trow main"><input type="checkbox"><span class="cb">1-3-2</span><span class="ku">3</span><span class="pr">10%</span><span class="od">12.0</span></div>
+      <div class="trow main"><input type="checkbox"><span class="cb">2-1-3</span><span class="ku">3</span><span class="pr">6%</span><span class="od">20.0</span></div>
+      <div class="trow main"><input type="checkbox"><span class="cb">1-3-4</span><span class="ku">2</span><span class="pr">8%</span><span class="od">15.0</span></div>
+      <div class="trow main"><input type="checkbox"><span class="cb">1-2-4</span><span class="ku">2</span><span class="pr">7%</span><span class="od">17.1</span></div>
+      <div class="trow main"><input type="checkbox"><span class="cb">1-4-3</span><span class="ku">2</span><span class="pr">6%</span><span class="od">20.0</span></div>
+      <div class="trow"><input type="checkbox"><span class="cb">2-3-1</span><span class="ku">2</span><span class="pr">4%</span><span class="od">30.0</span></div>
+      <div class="trow"><input type="checkbox"><span class="cb">3-1-2</span><span class="ku">2</span><span class="pr">5%</span><span class="od">24.0</span></div>
+      <div class="trow"><input type="checkbox"><span class="cb">3-1-4</span><span class="ku">2</span><span class="pr">4%</span><span class="od">30.0</span></div>
+      <div class="trow"><input type="checkbox"><span class="cb">1-3-6</span><span class="ku">1</span><span class="pr">4%</span><span class="od">30.0</span></div>
+      <div class="trow"><input type="checkbox"><span class="cb">1-2-6</span><span class="ku">1</span><span class="pr">4%</span><span class="od">30.0</span></div>
+      <div class="trow"><input type="checkbox"><span class="cb">2-1-4</span><span class="ku">1</span><span class="pr">3%</span><span class="od">40.0</span></div>
+      <div class="trow"><input type="checkbox"><span class="cb">3-2-1</span><span class="ku">1</span><span class="pr">3%</span><span class="od">40.0</span></div>
+      <div class="trow"><input type="checkbox"><span class="cb">4-1-3</span><span class="ku">1</span><span class="pr">3%</span><span class="od">40.0</span></div>
+      <div class="trow"><input type="checkbox"><span class="cb">4-3-1</span><span class="ku">1</span><span class="pr">2%</span><span class="od">60.0</span></div>
+    </div>
+    <div class="rnote">1頭は14/27＝52%に抑制（堅い側はオッズが沈むため）。穴＝<b>⑥岡村（6コース+24.7pt＝カード最大）</b>を1-3-6/1-2-6で。⑤加藤は§6ルール2の展示条件付き追加。</div>
+  </div>
+</div>
+
+<div class="rules">
+  <h3>§7 購入ルール（オッズ規律・各点に適用）</h3>
+  <div class="formula">買う下限オッズ ＝ 1.2 ÷ 想定確率（表の「下限倍」列）。<br>当日オッズがこれ<b>以上</b>なら買う。<b>下回れば買わない</b>（削った口は同レース内の条件を満たす点へ、無ければ留保へ）。</div>
+  <ol>
+    <li>6倍未満の点は、想定確率20%超のときのみ買う（今回は該当なし）。</li>
+    <li>増額は <b>想定確率×オッズ ≥ 1.5</b> の点のみ、1点あたり最大2口まで。高オッズというだけで増額しない。</li>
+    <li>同一レースの口数合計は配分表を超えない。追加は必ず同レースの低評価券を削る（追い上げ防止）。</li>
+    <li>条件を満たす点が無ければそのレースは買わない。留保8口を使い切る必要はない。</li>
+  </ol>
+
+  <h3>§6 当日補正ルール（全レース共通・3個のみ／発動を記録）</h3>
+  <ol>
+    <li><b>進入が枠なりでなければ全券中止</b>（例外なし）。中止分は留保へ。</li>
+    <li><b>展示タイム5位以下の艇は1着付けから外す</b>。削った口は展示タイム1〜2位の頭券へ均等振替。<span style="color:var(--sub)">（12Rで⑤加藤が展示1〜2位なら 1-3-5/1-2-5/3-1-5 各1口追加、振替元 4-3-1/3-2-1/2-1-4）</span></li>
+    <li><b>発表風速3m以上なら1頭券を半分</b>にし、削った分を2コース頭・3コース頭へ均等振替。3m未満なら何もしない。</li>
+  </ol>
+  <p style="margin-top:6px"><b>発動記録の義務：</b>各レース購入前に3ルールの「発動／非発動」を必ずメモする（事後正当化の防止）。</p>
+
+  <h3>✅ 購入前チェックリスト</h3>
+  <ul class="chk">
+    <li><input type="checkbox"><span>欠場艇を確認（特に8R④中岡）</span></li>
+    <li><input type="checkbox"><span>進入が枠なりか確認（枠なりでなければ全券中止）</span></li>
+    <li><input type="checkbox"><span>展示タイムの順位を確認（5位以下を1着付けから除外）</span></li>
+    <li><input type="checkbox"><span>発表風速を確認（3m以上なら1頭券を半分）</span></li>
+    <li><input type="checkbox"><span>各点：当日オッズ ≥ 下限倍 を確認</span></li>
+    <li><input type="checkbox"><span>3ルールの発動／非発動を記録した</span></li>
+    <li><input type="checkbox"><span>11Rは7Rの結果（⑤大平）を見てから購入した</span></li>
+  </ul>
+
+  <p class="disclaim">予想内容の出典：ai-council v2（2026-08-08作成）。本カードは買い目の再構成であり、印・口数・想定確率は原文どおり。<br>舟券購入は自己責任。的中・利益を保証するものではありません。無理のない範囲で。</p>
+</div>
+
+</body>
+</html>
